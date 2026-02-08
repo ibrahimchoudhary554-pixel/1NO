@@ -1,7 +1,5 @@
 import streamlit as st
-import gspread
-import google.generativeai as genai
-from google.oauth2.service_account import Credentials
+import google.genai as genai
 from datetime import datetime
 import os
 import time
@@ -94,3 +92,4 @@ if prompt := st.chat_input("Say something stupid..."):
         st.session_state.messages.append({"role": "assistant", "content": answer})
     except Exception as e:
         st.error(f"Execution Error: {e}")
+
