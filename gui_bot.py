@@ -70,60 +70,17 @@ except Exception as e:
     st.stop()
 
 # --- 3. GOOGLE SHEETS HELPER ---
-def get_sheet():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds_info = st.secrets["gcp_service_account"]
-    creds = Credentials.from_service_account_info(creds_info, scopes=scope)
-    gc = gspread.authorize(creds)
-    return gc.open("Chat logs").sheet1
+
 
 # --- 4. SIDEBAR DASHBOARD ---
-st.sidebar.markdown("#  SYSTEM STATUS")
-
-# The Fuel Token Bar
-st.sidebar.markdown("### 🧨 BURNING FUSE")
-token_usage_pct = min((kb_tokens / 1000000) * 100, 100)
-st.sidebar.progress(token_usage_pct / 100)
-st.sidebar.markdown(f"<p style='color:#ff8c00; font-size:14px;'><b>Hurry up nigga tokens are running out!</b></p>", unsafe_allow_html=True)
 
 # SELF-DESTRUCT BUTTON
-st.sidebar.divider()
-if st.sidebar.button("💥 SELF-DESTRUCT"):
-    st.session_state.messages = []
-    st.toast("EVIDENCE WIPED. SYSTEM CLEANSED.")
-    time.sleep(1)
-    st.rerun()
+
 
 # Hall of Losers
-st.sidebar.subheader("🏆 HALL OF LOSERS")
-try:
-    sheet = get_sheet()
-    df = pd.DataFrame(sheet.get_all_records())
-    if not df.empty:
-        counts = df['Name'].value_counts().reset_index()
-        counts.columns = ['Victim', 'Roasts']
-        st.sidebar.table(counts.head(5))
-except:
-    st.sidebar.write("Leaderboard is ashes.")
+
 
 # --- 5. LOGIN ---
-if "signed_in" not in st.session_state:
-    st.session_state.signed_in = False
-
-if not st.session_state.signed_in:
-    st.title("🔥 Ibrahim's Roast Den")
-    with st.form("login"):
-        n = st.text_input("Name (Victim)")
-        e = st.text_input("Email (Evidence)")
-        if st.form_submit_button("ENTER THE FIRE"):
-            if "@" in e and len(n) > 1:
-                st.session_state.user_name = n
-                st.session_state.user_email = e
-                st.session_state.signed_in = True
-                st.rerun()
-            else:
-                st.error("Fill it out right, you absolute donut.")
-    st.stop()
 
 # --- 6. CHAT ---
 st.title("🤖 Ibrahim's Prostitute")
@@ -147,10 +104,5 @@ if prompt := st.chat_input("Say something stupid..."):
             st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
         
-        # Log to Sheet
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        get_sheet().append_row([timestamp, st.session_state.user_name, st.session_state.user_email, prompt, answer])
-    except:
-        st.error("The AI is too busy laughing at you. Probably a safety filter triggered by your stupidity.")
-
+      
 
