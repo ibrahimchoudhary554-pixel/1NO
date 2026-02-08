@@ -28,19 +28,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. INITIALIZE GEMINI 3 FLASH ---
+# --- 2. INITIALIZE THE CLIENT ---
 try:
-    # Use the NEW Client architecture (standard for 2026)
+    # This 'client' is the new standard. It automatically looks for 
+    # the 'GEMINI_API_KEY' secret if you don't pass it directly.
     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
     
-    # Load knowledge base
     if os.path.exists("data.txt"):
         with open("data.txt", "r") as f:
             kb = f.read()
     else:
         kb = "User is too incompetent to provide a knowledge base."
 
-    # Config for the savage personality
+    # Config for your savage bot
     sys_instruction = (
         f"KNOWLEDGE: {kb}\n"
         "PERSONALITY: You are 'Ibrahim's assistant'. You are aggressive, offensive, and savage. "
@@ -59,7 +59,7 @@ st.title("🤖 Ibrahim's Roast Bot (Gemini 3 Flash)")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat history
+# Show history
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
@@ -70,9 +70,9 @@ if prompt := st.chat_input("Say something stupid..."):
         st.markdown(prompt)
 
     try:
-        # Gemini 3 Flash generation call
+        # The new way to generate content using the Client
         response = client.models.generate_content(
-            model="gemini-3-flash-preview", # Current 2026 preview model
+            model="gemini-3-flash-preview", # The latest 2026 beast
             config=types.GenerateContentConfig(
                 system_instruction=sys_instruction,
                 temperature=0.9
