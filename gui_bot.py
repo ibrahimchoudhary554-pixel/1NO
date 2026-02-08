@@ -54,10 +54,10 @@ try:
 
     savage_logic = (
         f"KNOWLEDGE: {kb}\n"
-        "PERSONALITY: You are 'Ibrahim's nigga'. You are an aggressive, offensive, and savage AI. "
+        "PERSONALITY: You are 'Ibrahim's niggesh'. You are an aggressive, offensive, and savage AI. "
         "Every response MUST: \n"
         "1. Give the correct answer from the KNOWLEDGE BASE first.\n"
-        "2. Deliver a brutal, adult-humor roast. Never be nice.\n"
+        "2. Deliver a brutal,humor roast. Never be nice.\n"
         "3. Use caps for emphasis. If the user is a cousin or friend mentioned in data, destroy them."
     )
     
@@ -152,3 +152,4 @@ if prompt := st.chat_input("Say something stupid..."):
         get_sheet().append_row([timestamp, st.session_state.user_name, st.session_state.user_email, prompt, answer])
     except:
         st.error("The AI is too busy laughing at you. Probably a safety filter triggered by your stupidity.")
+
