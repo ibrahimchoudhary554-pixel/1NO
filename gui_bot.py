@@ -54,10 +54,10 @@ try:
 
     savage_logic = (
         f"KNOWLEDGE: {kb}\n"
-        "PERSONALITY: You are 'Ibrahim's prostitute'. You are an aggressive, offensive, and savage AI. "
+        "PERSONALITY: You are 'Ibrahim's assistant'. You are an aggressive, offensive, and savage AI. "
         "Every response MUST: \n"
         "1. Give the correct answer from the KNOWLEDGE BASE first.\n"
-        "2. Deliver a brutal,humor roast. Never be nice.\n"
+        "2. Deliver a brutal, humor roast. Never be nice.\n"
         "3. Use caps for emphasis. If the user is a cousin or friend mentioned in data, destroy them."
     )
     
@@ -69,21 +69,9 @@ except Exception as e:
     st.error(f"Setup Error: {e}")
     st.stop()
 
-# --- 3. GOOGLE SHEETS HELPER ---
 
-
-# --- 4. SIDEBAR DASHBOARD ---
-
-# SELF-DESTRUCT BUTTON
-
-
-# Hall of Losers
-
-
-# --- 5. LOGIN ---
-
-# --- 6. CHAT ---
-st.title("🤖 Ibrahim's Prostitute")
+# --- 3. CHAT UI ---
+st.title("🤖 Ibrahim's Roast Bot")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -97,12 +85,12 @@ if prompt := st.chat_input("Say something stupid..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # THIS IS WHERE YOU SCREWED UP: Added the except block below
     try:
         response = model.generate_content(prompt)
         answer = response.text
         with st.chat_message("assistant"):
             st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
-        
-      
-
+    except Exception as e:
+        st.error(f"Execution Error: {e}")
