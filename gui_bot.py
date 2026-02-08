@@ -1,8 +1,7 @@
 import streamlit as st
-import google.generativeai as genai  # FIXED THIS IMPORT
-from datetime import datetime
+from google import genai
+from google.genai import types
 import os
-import time
 import pandas as pd
 
 # --- 1. THE HELLFIRE UI (CUSTOM CSS) ---
@@ -16,9 +15,6 @@ st.markdown("""
         border-right: 3px solid #ff0000; 
     }
     .stChatInputContainer { border-top: 2px solid #ff4b4b !important; }
-    .stProgress > div > div > div > div {
-        background-image: linear-gradient(to right, #ff0000, #ff8c00) !important;
-    }
     h1, h2, h3 { 
         color: #ff4b4b !important; 
         text-shadow: 0 0 10px #ff0000;
@@ -27,52 +23,43 @@ st.markdown("""
     .stButton>button {
         background-color: #ff0000 !important;
         color: white !important;
-        border-radius: 10px;
-        border: none;
         font-weight: bold;
-    }
-    .stButton>button:hover {
-        background-color: #8b0000 !important;
-        box-shadow: 0 0 15px #ff0000;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. INITIALIZE GEMINI 1.5 FLASH LATEST ---
+# --- 2. INITIALIZE GEMINI 3 FLASH ---
 try:
-    # Use the correct library configuration
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    # Use the NEW Client architecture (standard for 2026)
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
     
+    # Load knowledge base
     if os.path.exists("data.txt"):
         with open("data.txt", "r") as f:
             kb = f.read()
     else:
         kb = "User is too incompetent to provide a knowledge base."
 
-    savage_logic = (
+    # Config for the savage personality
+    sys_instruction = (
         f"KNOWLEDGE: {kb}\n"
-        "PERSONALITY: You are 'Ibrahim's assistant'. You are an aggressive, offensive, and savage AI. "
-        "Every response MUST: \n"
-        "1. Give the correct answer from the KNOWLEDGE BASE first.\n"
-        "2. Deliver a brutal, humor roast. Never be nice.\n"
-        "3. Use caps for emphasis. If the user is a cousin or friend mentioned in data, destroy them."
+        "PERSONALITY: You are 'Ibrahim's assistant'. You are aggressive, offensive, and savage. "
+        "1. Give the correct answer from KNOWLEDGE first.\n"
+        "2. Deliver a brutal, adult-humor roast. Never be nice.\n"
+        "3. Use CAPS for emphasis. Destroy any friends/cousins mentioned in data."
     )
     
-    model = genai.GenerativeModel(
-        model_name='gemini-1.5-flash-latest', 
-        system_instruction=savage_logic
-    )
 except Exception as e:
     st.error(f"Setup Error: {e}")
     st.stop()
 
-
 # --- 3. CHAT UI ---
-st.title("🤖 Ibrahim's Roast Bot")
+st.title("🤖 Ibrahim's Roast Bot (Gemini 3 Flash)")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display chat history
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
@@ -83,10 +70,20 @@ if prompt := st.chat_input("Say something stupid..."):
         st.markdown(prompt)
 
     try:
-        response = model.generate_content(prompt)
+        # Gemini 3 Flash generation call
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview", # Current 2026 preview model
+            config=types.GenerateContentConfig(
+                system_instruction=sys_instruction,
+                temperature=0.9
+            ),
+            contents=prompt
+        )
+        
         answer = response.text
         with st.chat_message("assistant"):
             st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
+        
     except Exception as e:
         st.error(f"Execution Error: {e}")
