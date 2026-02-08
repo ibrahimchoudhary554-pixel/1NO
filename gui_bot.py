@@ -1,5 +1,5 @@
 import streamlit as st
-import google.genai as genai
+import google.generativeai as genai  # FIXED THIS IMPORT
 from datetime import datetime
 import os
 import time
@@ -40,6 +40,7 @@ st.markdown("""
 
 # --- 2. INITIALIZE GEMINI 1.5 FLASH LATEST ---
 try:
+    # Use the correct library configuration
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
     if os.path.exists("data.txt"):
@@ -47,8 +48,6 @@ try:
             kb = f.read()
     else:
         kb = "User is too incompetent to provide a knowledge base."
-
-    kb_tokens = len(kb) // 4 
 
     savage_logic = (
         f"KNOWLEDGE: {kb}\n"
@@ -83,7 +82,6 @@ if prompt := st.chat_input("Say something stupid..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # THIS IS WHERE YOU SCREWED UP: Added the except block below
     try:
         response = model.generate_content(prompt)
         answer = response.text
@@ -92,4 +90,3 @@ if prompt := st.chat_input("Say something stupid..."):
         st.session_state.messages.append({"role": "assistant", "content": answer})
     except Exception as e:
         st.error(f"Execution Error: {e}")
-
