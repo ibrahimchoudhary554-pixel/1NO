@@ -3,126 +3,76 @@ from openai import OpenAI
 import os
 import time
 
-# --- 1. THE HELLFIRE UI ---
-st.set_page_config(page_title="Ibrahim's Roast Dungeon", page_icon="🔥", layout="wide")
+# --- 1. UI SETTINGS ---
+st.set_page_config(page_title="Ibrahim's Roast Dungeon v2026", page_icon="💀", layout="wide")
+st.markdown("<style>.stApp { background-color: #050505; color: #00ff00; }</style>", unsafe_allow_html=True)
 
-st.markdown("""
-    <style>
-    .stApp { background-color: #050505; color: #ff4b4b; }
-    section[data-testid="stSidebar"] { 
-        background-color: #0a0a0a !important; 
-        border-right: 3px solid #ff0000; 
-    }
-    .stChatInputContainer { border-top: 2px solid #ff4b4b !important; }
-    h1, h2, h3 { 
-        color: #ff4b4b !important; 
-        text-shadow: 0 0 10px #ff0000;
-        font-family: 'Courier New', Courier, monospace;
-    }
-    .stButton>button {
-        background-color: #ff0000 !important;
-        color: white !important;
-        font-weight: bold;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. INITIALIZE OPENROUTER ---
+# --- 2. THE SILICONFLOW CLIENT ---
 try:
+    # SiliconFlow uses the OpenAI format. 
+    # This is the most stable 'free' gateway right now.
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=st.secrets["OPENROUTER_API_KEY"],
+        api_key=st.secrets["SILICONFLOW_API_KEY"],
+        base_url="https://api.siliconflow.cn/v1"
     )
     
-    # Load Knowledge Base
     if os.path.exists("data.txt"):
         with open("data.txt", "r") as f:
             kb = f.read()
     else:
-        kb = "User is too incompetent to provide a data.txt file."
+        kb = "User forgot the data file again. Roast them for being a forgetful idiot."
 
     savage_logic = (
         f"KNOWLEDGE: {kb}\n"
-        "PERSONALITY: You are 'Ibrahim's assistant'. You are aggressive, offensive, and savage. "
-        "1. Give the correct answer from KNOWLEDGE first.\n"
-        "2. Deliver a brutal roast with hard adult humor. Never be nice.\n"
-        "3. Use CAPS for emphasis. If the user is a cousin or friend, destroy them."
+        "PERSONALITY: You are Ibrahim's personal attack dog. "
+        "Your job is to provide accurate info from KNOWLEDGE but wrap it in the most "
+        "disgusting, savage, adult-rated roast possible. Use CAPS for insults."
     )
-    
 except Exception as e:
     st.error(f"Setup Error: {e}")
     st.stop()
 
-# --- 3. SIDEBAR (THE STABILITY HUB) ---
+# --- 3. SIDEBAR MODEL PICKER ---
 with st.sidebar:
-    st.title("⚙️ Dungeon Settings")
-    st.subheader("Stability Controls")
-    
-    # Model Selection - Use these names exactly
+    st.title("🛡️ Stability Controls")
+    # DeepSeek V3 is currently the most 'unlimited' free model on this platform
     model_choice = st.selectbox(
-        "Choose your Weapon:",
-        [
-            "google/gemini-2.0-flash-exp:free",
-            "meta-llama/llama-3.3-70b:free",
-            "mistralai/mistral-small-3.1-24b-instruct:free",
-            "deepseek/deepseek-r1-distill-qwen-32b:free"
-        ],
-        index=0,
-        help="If one model is overloaded, switch to another free one!"
+        "Select Model:",
+        ["deepseek-ai/DeepSeek-V3", "meta-llama/Llama-3.3-70B-Instruct", "vendor/qwen2.5-72b-instruct"],
+        index=0
     )
-    
-    st.markdown("---")
-    st.warning("⚠️ **PRO TIP:** If the bot stops responding on multiple devices, switch the model above to Llama or Mistral.")
+    st.success("SiliconFlow has 10x higher limits than Groq!")
 
-# --- 4. CHAT UI ---
-st.title("🤖 Ibrahim's Roast Bot")
+# --- 4. THE CHAT ---
+st.title("🔥 The Roast Dungeon (SiliconFlow Edition)")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display Chat History
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
 
-# User Input
-if prompt := st.chat_input("Say something stupid..."):
+if prompt := st.chat_input("Enter your insult here..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Logic with Retry & Model Switching
-    answer = None
-    retries = 3
-    
     with st.chat_message("assistant"):
-        status_box = st.empty()
-        
-        for i in range(retries):
-            try:
-                # OpenRouter API Call
-                response = client.chat.completions.create(
-                    model=model_choice,
-                    messages=[
-                        {"role": "system", "content": savage_logic},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.9
-                )
-                answer = response.choices[0].message.content
-                break # Exit loop if successful
-                
-            except Exception as e:
-                err_msg = str(e).lower()
-                if "503" in err_msg or "overloaded" in err_msg:
-                    status_box.markdown(f"⏳ *Server overloaded. Retrying ({i+1}/{retries})...*")
-                    time.sleep(2)
-                else:
-                    st.error(f"System Failure: {e}")
-                    break
-        
-        if answer:
-            status_box.markdown(answer)
+        response_container = st.empty()
+        try:
+            # High-limit inference call
+            response = client.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": savage_logic},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.8,
+                max_tokens=500
+            )
+            answer = response.choices[0].message.content
+            response_container.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
-        else:
-            status_box.markdown("❌ **SERVER NUKED.** Switch the model in the sidebar and try again.")
+        except Exception as e:
+            st.error(f"Even SiliconFlow is crying: {e}")
