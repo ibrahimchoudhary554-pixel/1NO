@@ -1,38 +1,19 @@
 import streamlit as st
-from google import genai
-from google.genai import types
+from openai import OpenAI
 import os
-import pandas as pd
+import time
 
-# --- 1. THE HELLFIRE UI (CUSTOM CSS) ---
+# --- 1. THE HELLFIRE UI ---
 st.set_page_config(page_title="Ibrahim's Roast Dungeon", page_icon="🔥", layout="wide")
+st.markdown("<style>.stApp { background-color: #050505; color: #ff4b4b; }</style>", unsafe_allow_html=True)
 
-st.markdown("""
-    <style>
-    .stApp { background-color: #050505; color: #ff4b4b; }
-    section[data-testid="stSidebar"] { 
-        background-color: #0a0a0a !important; 
-        border-right: 3px solid #ff0000; 
-    }
-    .stChatInputContainer { border-top: 2px solid #ff4b4b !important; }
-    h1, h2, h3 { 
-        color: #ff4b4b !important; 
-        text-shadow: 0 0 10px #ff0000;
-        font-family: 'Courier New', Courier, monospace;
-    }
-    .stButton>button {
-        background-color: #ff0000 !important;
-        color: white !important;
-        font-weight: bold;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. INITIALIZE THE CLIENT ---
+# --- 2. INITIALIZE OPENROUTER CLIENT ---
 try:
-    # This 'client' is the new standard. It automatically looks for 
-    # the 'GEMINI_API_KEY' secret if you don't pass it directly.
-    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    # OpenRouter uses the OpenAI library but points to a different URL
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=st.secrets["OPENROUTER_API_KEY"], 
+    )
     
     if os.path.exists("data.txt"):
         with open("data.txt", "r") as f:
@@ -40,13 +21,11 @@ try:
     else:
         kb = "User is too incompetent to provide a knowledge base."
 
-    # Config for your savage bot
-    sys_instruction = (
+    savage_logic = (
         f"KNOWLEDGE: {kb}\n"
         "PERSONALITY: You are 'Ibrahim's assistant'. You are aggressive, offensive, and savage. "
         "1. Give the correct answer from KNOWLEDGE first.\n"
-        "2. Deliver a brutal, adult-humor roast. Never be nice.\n"
-        "3. Use CAPS for emphasis. Destroy any friends/cousins mentioned in data."
+        "2. Deliver a brutal roast. Use CAPS for emphasis. Never be nice."
     )
     
 except Exception as e:
@@ -54,12 +33,11 @@ except Exception as e:
     st.stop()
 
 # --- 3. CHAT UI ---
-st.title("🤖 Ibrahim's Roast Bot (Gemini 3 Flash)")
+st.title("🤖 Ibrahim's Roast Bot (OpenRouter)")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Show history
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
@@ -70,17 +48,18 @@ if prompt := st.chat_input("Say something stupid..."):
         st.markdown(prompt)
 
     try:
-        # The new way to generate content using the Client
-        response = client.models.generate_content(
-            model="gemini-3-flash-preview", # The latest 2026 beast
-            config=types.GenerateContentConfig(
-                system_instruction=sys_instruction,
-                temperature=0.9
-            ),
-            contents=prompt
+        # We are using 'google/gemini-2.0-flash-exp:free' or 'meta-llama/llama-3.3-70b:free'
+        # These are high-quality FREE models on OpenRouter
+        response = client.chat.completions.create(
+            model="google/gemini-2.0-flash-exp:free", 
+            messages=[
+                {"role": "system", "content": savage_logic},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.9
         )
         
-        answer = response.text
+        answer = response.choices[0].message.content
         with st.chat_message("assistant"):
             st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
