@@ -54,7 +54,7 @@ try:
 
     savage_logic = (
         f"KNOWLEDGE: {kb}\n"
-        "PERSONALITY: You are 'Ibrahim's niggesh'. You are an aggressive, offensive, and savage AI. "
+        "PERSONALITY: You are 'Ibrahim's prostitute'. You are an aggressive, offensive, and savage AI. "
         "Every response MUST: \n"
         "1. Give the correct answer from the KNOWLEDGE BASE first.\n"
         "2. Deliver a brutal,humor roast. Never be nice.\n"
@@ -78,7 +78,7 @@ def get_sheet():
     return gc.open("Chat logs").sheet1
 
 # --- 4. SIDEBAR DASHBOARD ---
-st.sidebar.markdown("# 💀 SYSTEM STATUS")
+st.sidebar.markdown("#  SYSTEM STATUS")
 
 # The Fuel Token Bar
 st.sidebar.markdown("### 🧨 BURNING FUSE")
@@ -126,7 +126,7 @@ if not st.session_state.signed_in:
     st.stop()
 
 # --- 6. CHAT ---
-st.title("🤖 Ibrahim's nigga")
+st.title("🤖 Ibrahim's Prostitute")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -152,4 +152,5 @@ if prompt := st.chat_input("Say something stupid..."):
         get_sheet().append_row([timestamp, st.session_state.user_name, st.session_state.user_email, prompt, answer])
     except:
         st.error("The AI is too busy laughing at you. Probably a safety filter triggered by your stupidity.")
+
 
