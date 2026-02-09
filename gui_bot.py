@@ -37,7 +37,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 3. HARD-CODED SAFE LIST ---
-SAFE_NAMES = ["ibrahim", "owner", "zainab", "king", "boss"]
+SAFE_NAMES = ["ibrahim", "owner", "king", "boss"]
 
 # --- 4. UI & MODEL SWITCHER ---
 st.title("🤖 Ibrahim's Roast Bot")
@@ -110,3 +110,4 @@ if prompt := st.chat_input("Enter a name..."):
             st.session_state.messages.append({"role": "assistant", "content": answer})
         except Exception as e:
             st.error(f"System Overload. Switch models or wait 5 mins. Report: @ibrahimchoudhary__")
+
