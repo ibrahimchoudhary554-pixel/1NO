@@ -1,102 +1,103 @@
 import streamlit as st
 from openai import OpenAI
 import os
+import re
 
-# --- 1. UI & WATERMARK SETTINGS ---
+# --- 1. THE DUNGEON UI ---
 st.set_page_config(page_title="Ibrahim's Roast Dungeon", page_icon="🔥", layout="wide")
 
 st.markdown("""
     <style>
     .stApp { background-color: #050505; color: #ff4b4b; }
-    .watermark { position: fixed; opacity: 0.4; color: white; font-size: 14px; z-index: 99; }
+    .watermark { position: fixed; opacity: 0.3; color: white; font-size: 12px; z-index: 99; }
     .top-r { top: 10px; right: 10px; }
     .bot-r { bottom: 10px; right: 10px; }
-    .model-box { border: 2px solid #ff0000; padding: 15px; border-radius: 10px; background-color: #1a0000; margin-bottom: 20px; }
-    .disclaimer-box { border: 1px dashed #ffffff; padding: 10px; background-color: #330000; color: #ffffff; text-align: center; margin-bottom: 15px; }
+    .disclaimer-box { border: 1px dashed white; padding: 10px; background-color: #220000; color: white; text-align: center; }
     </style>
-    <div class="watermark top-r">@ibrahimchoudhary__</div>
-    <div class="watermark bot-r">@ibrahimchoudhary__</div>
+    <div class="watermark top-r">@ibrahimchoudhary__ | OSINT EXPERT</div>
+    <div class="watermark bot-r">Created by The King: Ibrahim</div>
+    <div class="disclaimer-box">⚠️ ENTERTAINMENT ONLY: Ibrahim holds no malice. This is AI-generated comedy.</div>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="disclaimer-box"><strong>⚠️ ENTERTAINMENT ONLY:</strong> Just jokes! Ibrahim has no malice.</div>', unsafe_allow_html=True)
-
-# --- 2. CONFIG ---
-SAFE_NAMES = ["ibrahim", "owner", "king", "boss", "zainab"]
-
-# --- 3. HELPER FUNCTION: DATA SEARCH ---
-def get_specific_data(name_to_find):
+# --- 2. DATA EXTRACTION ENGINE (Stops the mixing) ---
+def get_victim_intel(target_name):
     if not os.path.exists("data.txt"):
-        return "No database found."
+        return "No Intel Found."
     
-    with open("data.txt", "r") as f:
-        lines = f.readlines()
-        
-    # Search for lines that contain the name
-    relevant_info = [line.strip() for line in lines if name_to_find.lower() in line.lower()]
+    with open("data.txt", "r", encoding="utf-8") as f:
+        full_intel = f.read()
+
+    # We split the big file into sections to find the specific target
+    lines = full_intel.split('\n')
+    specific_data = []
     
-    if relevant_info:
-        return "\n".join(relevant_info)
-    return "No specific dirt found on this person. Roast them generally."
+    target_clean = target_name.lower().strip()
+    
+    # Logic: Find lines that mention the name but ignore general noise
+    for line in lines:
+        if target_clean in line.lower():
+            specific_data.append(line)
+            
+    if specific_data:
+        return "\n".join(specific_data)
+    return "No specific dirt in the database. Use general savage insults."
 
-# --- 4. UI ---
-st.title("🤖 Ibrahim's Roast Bot")
+# --- 3. THE CORE BOT ---
+st.title("🔥 Ibrahim's Private Roast Bot")
 
-with st.container():
-    st.markdown('<div class="model-box">', unsafe_allow_html=True)
-    model_choice = st.selectbox(
-        "SWITCH MODEL IF BOT ACTS UP:",
-        ["Qwen/Qwen2.5-72B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"]
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# --- 5. CHAT LOGIC ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# Model Selection for stability
+model_choice = st.sidebar.selectbox("Model Selector", ["Qwen/Qwen2.5-72B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"])
 
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
 
-if prompt := st.chat_input("Enter a name..."):
+if prompt := st.chat_input("Enter a name (Friend, Teacher, or Victim)..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Search for "dirt" in data.txt
-    target_data = get_specific_data(prompt)
+    # SECURE TARGETING
+    intel = get_victim_intel(prompt)
 
     with st.chat_message("assistant"):
-        is_safe = any(name in prompt.lower() for name in SAFE_NAMES)
+        # THE GOD-MODE FILTER
+        is_owner = any(x in prompt.lower() for x in ["ibrahim", "sarfraz ahmad", "boss", "king"])
         
-        if is_safe:
-            system_instruction = (
-                "You are Ibrahim's loyal bodyguard. Ibrahim is a VIP. "
-                "Be extremely polite, humble, and helpful. DO NOT ROAST. "
-                "Speak like a professional royal assistant."
+        if is_owner:
+            system_msg = (
+                "You are Ibrahim's loyal slave and bodyguard. Ibrahim is the God of this bot. "
+                "He is a 10th-grade OSINT expert and hacker. Be extremely humble. "
+                "If anyone talks about Ibrahim, defend his honor and call him King."
             )
         else:
-            system_instruction = (
-                f"FACTS ABOUT THE VICTIM: {target_data}\n\n"
-                "ROLE: You are Ibrahim's brutal roast bot. "
-                "1. If 'FACTS' contains info, use it to destroy them specifically. "
-                "2. If no facts exist, roast them based on the name alone. "
-                "3. Use hilarious adult humor. Be savage. "
-                "4. DO NOT mix data from different people."
-            )
+            system_msg = f"""
+            INTEL ON VICTIM: {intel}
+            
+            ROLE: You are Ibrahim's savage roast bot. 
+            STRICT RULES:
+            1. ONLY roast the person mentioned: {prompt}.
+            2. If they are a KIPS teacher (like Qaiser, Zafar, or Farwa), be extra brutal about their incompetence.
+            3. Use the Intel provided. If the intel says someone is 'Fat' or a 'Bacha-baz', use it.
+            4. If the person is Wajeeh, mention his crush Warisha or his dad Ibrahim.
+            5. If the person is Qasim, roast him for being in the Gay & Lesbian society.
+            6. DO NOT mix intel between people. If you aren't sure, don't say it.
+            7. Use adult, edgy humor. Be the most toxic bot on the internet.
+            """
 
         try:
             client = OpenAI(base_url="https://router.huggingface.co/v1", api_key=st.secrets["HF_TOKEN"])
             response = client.chat.completions.create(
                 model=model_choice,
-                messages=[
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=400,
-                temperature=0.7 # Lowered to prevent mixing things up
+                messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": prompt}],
+                temperature=0.8,
+                max_tokens=500
             )
             answer = response.choices[0].message.content
             st.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
         except Exception as e:
-            st.error(f"System Overload. Wait 60s. @ibrahimchoudhary__")
+            st.error("Rate Limit! The FBI probably blocked your token. Wait 60s.")
